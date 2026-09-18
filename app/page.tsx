@@ -5,15 +5,20 @@ import { ArrowUpRight, Clapperboard, FileText, Menu, Play, X } from 'lucide-reac
 
 type Language = 'en' | 'fr' | 'ar'
 
-type Project = { title: string; category: string; image: string; format: 'long' | 'short'; youtubeUrl: string; featured: boolean }
+type VideoFormat = 'long' | 'short'
+type Project = { title: string; category: string; image: string; format: VideoFormat; youtubeUrl: string; featured: boolean }
+type ProjectCategory = 'Podcast' | 'Short Form' | 'Motion Graphics' | 'YouTube' | 'Faceless Content'
+type ProjectMedia = Pick<Project, 'image' | 'format' | 'youtubeUrl' | 'featured'> & { category: ProjectCategory }
 
-const projectImages = [
-  '/videos cover/podcast1.png',
-  'videos cover/podcast2.png',
-  'videos cover/claude.png',
-  'https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?auto=format&fit=crop&w=1400&q=85',
-  'videos cover/short1.png',
-  'videos cover/coffee.png',
+// Edit this single list when adding or updating a project.
+// Keep the order aligned with the six translated project titles below.
+const projectMedia: ProjectMedia[] = [
+  { category: 'Podcast', image: '/videos cover/podcast1.png', format: 'short', youtubeUrl: 'https://www.youtube.com/shorts/UxSDjpyY6hA', featured: true },
+  { category: 'Short Form', image: 'videos cover/podcast2.png', format: 'short', youtubeUrl: 'https://www.youtube.com/shorts/7TAgE9KdoL4', featured: true },
+  { category: 'Motion Graphics', image: 'videos cover/claude.png', format: 'long', youtubeUrl: 'https://www.youtube.com/watch?v=ODl9gOkgNbA', featured: true },
+  { category: 'YouTube', image: 'https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?auto=format&fit=crop&w=1400&q=85', format: 'long', youtubeUrl: '', featured: true },
+  { category: 'Short Form', image: 'videos cover/short1.png', format: 'short', youtubeUrl: 'https://www.youtube.com/shorts/MzOO8N2bzhk', featured: true },
+  { category: 'Short Form', image: 'videos cover/coffee.png', format: 'short', youtubeUrl: 'https://www.youtube.com/shorts/whgxHW131W0', featured: true },
 ]
 
 const translations = {
@@ -26,9 +31,6 @@ const translations = {
 } as const
 
 const metricValues = ['1M+', '50K+', '100+', '3+']
-const projectFormats: Project['format'][] = ['short', 'short', 'long', 'long', 'short', 'short']
-const projectYoutubeUrls = ['https://www.youtube.com/shorts/UxSDjpyY6hA', 'https://www.youtube.com/shorts/7TAgE9KdoL4', 'https://www.youtube.com/watch?v=ODl9gOkgNbA', '', 'https://www.youtube.com/shorts/MzOO8N2bzhk', 'https://www.youtube.com/shorts/whgxHW131W0']
-const projectFeatured = [true, true, true, true, true, true]
 
 const getYoutubeEmbedUrl = (url: string) => {
   try {
@@ -54,8 +56,9 @@ export default function Page() {
   const [playingProject, setPlayingProject] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const t = translations[language]
-  const visibleFilters = t.filters.filter((_, index) => index !== 2 && index !== 5)
-  const projects = useMemo(() => t.projects.map((p, index) => ({ title: p[0], category: index === 0 || index === 5 ? t.filters[1] : p[1], image: projectImages[index], format: projectFormats[index], youtubeUrl: projectYoutubeUrls[index], featured: projectFeatured[index] })), [t])
+  const facelessCategoryLabel = { en: 'Faceless Content', fr: 'Contenu sans visage', ar: 'محتوى بدون ظهور' }[language]
+  const visibleFilters = [...t.filters.filter((_, index) => index !== 2 && index !== 5), facelessCategoryLabel]
+  const projects = useMemo(() => t.projects.map((p, index) => ({ ...projectMedia[index], title: p[0], category: index === 0 || index === 5 ? t.filters[1] : p[1] })), [t])
 
   useEffect(() => {
     const saved = window.localStorage.getItem('nxr-language') as Language | null
@@ -76,7 +79,7 @@ export default function Page() {
     <nav className="nav" aria-label="Main navigation"><a href="#top" className="brand" onClick={closeMenu}>NXR<span>Studio</span></a><div className={`nav-links ${menuOpen ? 'is-open' : ''}`}>{t.nav.slice(0, 3).map((item, index) => <a href={['#work', '#services', '#about'][index]} key={item} onClick={closeMenu}>{item}</a>)}</div><div className="language-switcher" aria-label="Language selector">{(['en', 'fr', 'ar'] as Language[]).map((item) => <button key={item} className={language === item ? 'active' : ''} onClick={() => chooseLanguage(item)}>{item.toUpperCase()}</button>)}</div><button className="menu-button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></nav>
     <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow"><span className="eyebrow-dot" /> {t.editor}</p><h1>{t.hero}</h1><p className="hero-text">{t.heroText}</p><div className="hero-actions"><a className="button button-primary" href="#work">{t.viewWork} <ArrowUpRight size={17} /></a><a className="button button-ghost" href={contactLinks.cv} download><FileText size={16} /> CV</a><a className="button button-ghost" href={contactLinks.youtube} target="_blank" rel="noreferrer">YouTube</a><a className="button button-ghost" href={contactLinks.instagram} target="_blank" rel="noreferrer">Instagram</a></div></div><a href="#work" className="showreel" aria-label={t.showreel}><img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=85" alt="Film camera in a dark studio" /><span className="showreel-overlay"><span className="play-button"><Play fill="currentColor" size={18} /></span><span>{t.showreel}</span></span><span className="reel-index">01 / 06</span></a></section>
     <section className="metrics" aria-label="Studio metrics">{metricValues.map((value, index) => <div key={value}><strong>{value}</strong><span>{t.metrics[index]}</span></div>)}</section>
-    <section className="work-section section" id="work"><div className="section-heading"><div><p className="eyebrow">{t.desk}</p><h2>{t.selected}</h2></div><p className="section-note">{t.selectionNote}</p></div><div className="filters" role="tablist" aria-label="Filter projects">{visibleFilters.map((filter, index) => <button key={filter} className={activeFilter === index ? 'active' : ''} onClick={() => setActiveFilter(index)}>{filter}</button>)}</div><div className="work-grid">{filteredProjects.map((project) => { const isPlaying = playingProject === project.title && project.youtubeUrl; return <div className={`project-card project-${project.format}`} key={project.title} role="button" tabIndex={0} onClick={() => project.youtubeUrl && setPlayingProject(project.title)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && project.youtubeUrl) { event.preventDefault(); setPlayingProject(project.title) } }}><span className="project-image">{isPlaying ? <iframe src={`${getYoutubeEmbedUrl(project.youtubeUrl)}?autoplay=1&rel=0&controls=1&modestbranding=1&iv_load_policy=1&disablekb=0&fs=1`} title={project.title} allow="autoplay; encrypted-media; fullscreen" allowFullScreen /> : <><img src={project.image} alt="" /><span className="project-play"><Play fill="currentColor" size={15} /></span></>}</span><span className="project-meta"><span><strong>{project.title}</strong></span><ArrowUpRight size={18} /></span></div> })}</div></section>
+    <section className="work-section section" id="work"><div className="section-heading"><div><p className="eyebrow">{t.desk}</p><h2>{t.selected}</h2></div><p className="section-note">{t.selectionNote}</p></div><div className="filters" role="tablist" aria-label="Filter projects">{visibleFilters.map((filter, index) => <button key={filter} className={activeFilter === index ? 'active' : ''} onClick={() => setActiveFilter(index)}>{filter}</button>)}</div><div className="work-grid">{filteredProjects.map((project) => { const isPlaying = playingProject === project.title && project.youtubeUrl; return <div className={`project-card project-${project.format}`} key={project.title} role="button" tabIndex={0} onClick={() => project.youtubeUrl && setPlayingProject(project.title)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && project.youtubeUrl) { event.preventDefault(); setPlayingProject(project.title) } }}><span className="project-image">{isPlaying ? <iframe src={`${getYoutubeEmbedUrl(project.youtubeUrl)}?autoplay=1&rel=0&controls=1&modestbranding=1&iv_load_policy=1&disablekb=0&fs=1`} title={project.title} allow="autoplay; encrypted-media; fullscreen" allowFullScreen /> : <><img src={project.image} alt="" /><span className="project-play"><Play fill="currentColor" size={15} /></span></>}</span><span className="project-meta"><span><strong>{project.title}</strong><small>{project.category}</small></span><ArrowUpRight size={18} /></span></div> })}</div></section>
     <section className="services-section section" id="services"><div className="section-heading"><div><p className="eyebrow">{t.toolkit}</p><h2>{t.what}</h2></div></div><div className="service-list">{t.services.map(([title, description], index) => <div className="service-row" key={title}><span className="service-number">0{index + 1}</span><h3>{title}</h3><p>{description}</p><ArrowUpRight size={19} /></div>)}</div></section>
     <section className="about-section section" id="about"><div className="about-image"><img src="/me.png" alt="Noureddine Bouderbala" /></div><div className="about-copy"><p className="eyebrow">{t.aboutEyebrow}</p><h2>{t.aboutTitle}</h2><p>{t.about1}</p><p>{t.about2}</p></div></section>
     <footer className="footer"><div><a href="#top" className="brand">NXR<span>Studio</span></a><p>{t.footer}</p></div><div className="footer-right"><div className="footer-socials"><a href={contactLinks.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a><a href={contactLinks.youtube} target="_blank" rel="noreferrer">YouTube</a><a href={contactLinks.tiktok} target="_blank" rel="noreferrer">TikTok</a><a href={contactLinks.cv} download>CV</a><a href="mailto:hello@nxrstudio.com">Email</a></div><p>© 2026 NXR Studio</p></div></footer>
